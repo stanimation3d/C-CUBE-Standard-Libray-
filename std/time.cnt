@@ -1,0 +1,98 @@
+// time.cnt
+// Standart Zaman (Time) modülü
+
+import std::string; // toString() dönüşümleri için gerekebilir
+
+// Harici C veya sistem zaman API'lerine bağlandığı varsayılan dahili fonksiyonlar.
+// Bu fonksiyonlar, işletim sisteminin zaman çağrılarını kullanır (örn. gettimeofday, sleep).
+extern fn _cnt_time_get_system_time() -> int; // Unix Epoch'tan bu yana saniye cinsinden zaman
+extern fn _cnt_time_get_monotonic_time_ms() -> int; // Monotonik zaman (ms), sistem saatinden bağımsız
+extern fn _cnt_time_sleep_ms(milliseconds: int) -> void;
+
+// Gelecekte daha detaylı tarih/saat bilgileri için:
+// extern fn _cnt_time_get_datetime_components(timestamp: int) -> DateTimeComponents;
+
+/// `DateTimeComponents` yapısı: Tarih ve zamanın bileşenlerini tutar.
+/// Örneğin: yıl, ay, gün, saat, dakika, saniye.
+pub struct DateTimeComponents {
+    year: int;
+    month: int;   // 1-12
+    day: int;     // 1-31
+    hour: int;    // 0-23
+    minute: int;  // 0-59
+    second: int;  // 0-59
+    // Gelecekte eklenebilecekler: millisecond, weekday, yearday, timezone_offset
+}
+
+/// Programın belirtilen milisaniye kadar duraklamasını (beklemesini) sağlar.
+///
+/// Bu fonksiyon, sistemin yoğunluğunu azaltmak için iş parçacığını askıya alır.
+///
+/// # Parametreler
+/// - `milliseconds`: Programın bekleyeceği süre (milisaniye cinsinden).
+pub fn sleep(milliseconds: int) -> void {
+    if milliseconds < 0 {
+        // Negatif değerler için belki bir hata (Result) döndürülebilir
+        // veya basitçe hiçbir şey yapılmayabilir. Şimdilik pas geçiyoruz.
+        return;
+    }
+    _cnt_time_sleep_ms(milliseconds);
+}
+
+/// Unix Epoch'tan (1 Ocak 1970 UTC) bu yana geçen saniye sayısını döndürür.
+///
+/// Bu, sistem saatine dayalı bir zaman değeridir ve ileri veya geri atlayabilir (saat ayarı değişirse).
+/// Daha doğru ölçümler için `uptime_ms()` fonksiyonunu kullanın.
+///
+/// # Dönüş Değeri
+/// Unix Epoch'tan bu yana geçen saniye sayısı (int).
+pub fn system_time_seconds() -> int {
+    _cnt_time_get_system_time()
+}
+
+/// Sistem başlatıldığından veya belirli bir sabit noktadan bu yana geçen milisaniye sayısını döndürür.
+///
+/// Bu zaman monotoniktir, yani geriye doğru gitmez ve sistem saati değişikliklerinden etkilenmez.
+/// Süreleri ölçmek için daha uygundur.
+///
+/// # Dönüş Değeri
+/// Sistem başlatıldığından bu yana geçen milisaniye sayısı (int).
+pub fn uptime_ms() -> int {
+    _cnt_time_get_monotonic_time_ms()
+}
+
+// --- Gelecekte Eklenebilecek Tarih/Saat Fonksiyonları ---
+
+// Not: Bu fonksiyonların implementasyonu, _cnt_time_get_datetime_components gibi
+// bir extern fonksiyona veya daha karmaşık dahili hesaplamalara dayanabilir.
+// Bu fonksiyonlar için bir Result<DateTimeComponents, Error> dönüş tipi de düşünülebilir.
+
+/// Mevcut sistem zamanını `DateTimeComponents` olarak döndürür.
+///
+/// # Dönüş Değeri
+/// Mevcut tarih ve zaman bileşenlerini içeren `DateTimeComponents` yapısı.
+ pub fn now() -> DateTimeComponents {
+     let current_seconds = system_time_seconds();
+//     // Burası `_cnt_time_get_datetime_components` gibi bir extern fonksiyona çağrı yapabilir,
+//     // veya Unix timestamp'ı DateTimeComponents'a dönüştürmek için karmaşık bir algoritmaya ihtiyaç duyabilir.
+     // Şimdilik sadece yer tutucu.
+     // _cnt_time_get_datetime_components(current_seconds)
+     DateTimeComponents {
+         year: 2024, month: 1, day: 1, hour: 0, minute: 0, second: 0 // Örnek varsayılan değerler
+     }
+ }
+
+// DateTimeComponents için toString() metodu
+// CNT'de "trait"ler veya "interface"ler olursa, bu method DateTimeComponents için bir "ToString" trait'i implemente edebilir.
+// Eğer yoksa, string::from_datetime_components(&components) gibi global bir fonksiyon olabilir.
+ pub fn to_string(dtc: &DateTimeComponents) -> string {
+     let s_year = string::from_int(dtc.year);
+     let s_month = string::from_int(dtc.month);
+     let s_day = string::from_int(dtc.day);
+     let s_hour = string::from_int(dtc.hour);
+     let s_minute = string::from_int(dtc.minute);
+     let s_second = string::from_int(dtc.second);
+
+//     // Basit bir format
+     s_year + "-" + s_month + "-" + s_day + " " + s_hour + ":" + s_minute + ":" + s_second
+ }

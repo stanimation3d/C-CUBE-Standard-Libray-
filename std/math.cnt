@@ -1,0 +1,182 @@
+// math.cnt
+// Standart Matematiksel Fonksiyonlar ve Sabitler modülü
+
+// Harici C veya sistem matematik kütüphanelerine bağlandığı varsayılan dahili fonksiyonlar.
+// Bu fonksiyonlar, altta yatan sistemin (örn. C'deki `math.h`) implementasyonlarını kullanır.
+extern fn _cnt_math_abs_int(value: int) -> int;
+extern fn _cnt_math_abs_float(value: float) -> float;
+extern fn _cnt_math_sqrt(value: float) -> float;
+extern fn _cnt_math_pow(base: float, exponent: float) -> float;
+extern fn _cnt_math_sin(angle: float) -> float;
+extern fn _cnt_math_cos(angle: float) -> float;
+extern fn _cnt_math_tan(angle: float) -> float;
+extern fn _cnt_math_log(value: float) -> float; // Doğal logaritma (ln)
+extern fn _cnt_math_log10(value: float) -> float; // 10 tabanında logaritma
+extern fn _cnt_math_exp(value: float) -> float; // e^x
+extern fn _cnt_math_floor(value: float) -> float;
+extern fn _cnt_math_ceil(value: float) -> float;
+extern fn _cnt_math_round(value: float) -> float;
+
+// Sabitler
+extern let _CNT_MATH_PI: float;
+extern let _CNT_MATH_E: float;
+
+/// Bir tam sayının mutlak değerini döndürür.
+///
+/// # Parametreler
+/// - `value`: Mutlak değeri alınacak tam sayı.
+///
+/// # Dönüş Değeri
+/// Tam sayının mutlak değeri.
+pub fn abs(value: int) -> int {
+    _cnt_math_abs_int(value)
+}
+
+/// Bir ondalık sayının mutlak değerini döndürür.
+///
+/// # Parametreler
+/// - `value`: Mutlak değeri alınacak ondalık sayı.
+///
+/// # Dönüş Değeri
+/// Ondalık sayının mutlak değeri.
+pub fn abs_f(value: float) -> float { // abs ile aynı isimde fonksiyon overload'u yoksa abs_f gibi ayırmak gerekebilir
+    _cnt_math_abs_float(value)
+}
+
+/// Bir sayının karekökünü döndürür.
+/// Negatif sayılar için davranış belgelenmelidir (örn. NaN döndürebilir).
+///
+/// # Parametreler
+/// - `value`: Karekökü alınacak ondalık sayı.
+///
+/// # Dönüş Değeri
+/// Sayının karekökü.
+pub fn sqrt(value: float) -> float {
+    _cnt_math_sqrt(value)
+}
+
+/// Bir sayının belirli bir üssünü döndürür.
+///
+/// # Parametreler
+/// - `base`: Taban.
+/// - `exponent`: Üs.
+///
+/// # Dönüş Değeri
+/// `base` üzeri `exponent` değeri.
+pub fn pow(base: float, exponent: float) -> float {
+    _cnt_math_pow(base, exponent)
+}
+
+/// Bir açının sinüsünü (radyan cinsinden) döndürür.
+///
+/// # Parametreler
+/// - `angle`: Sinüsü alınacak açı (radyan).
+///
+/// # Dönüş Değeri
+/// Açının sinüs değeri.
+pub fn sin(angle: float) -> float {
+    _cnt_math_sin(angle)
+}
+
+/// Bir açının kosinüsünü (radyan cinsinden) döndürür.
+///
+/// # Parametreler
+/// - `angle`: Kosinüsü alınacak açı (radyan).
+///
+/// # Dönüş Değeri
+/// Açının kosinüs değeri.
+pub fn cos(angle: float) -> float {
+    _cnt_math_cos(angle)
+}
+
+/// Bir açının tanjantını (radyan cinsinden) döndürür.
+///
+/// # Parametreler
+/// - `angle`: Tanjantı alınacak açı (radyan).
+///
+/// # Dönüş Değeri
+/// Açının tanjant değeri.
+pub fn tan(angle: float) -> float {
+    _cnt_math_tan(angle)
+}
+
+/// Bir sayının doğal logaritmasını (ln) döndürür.
+/// Negatif sayılar için davranış belgelenmelidir.
+///
+/// # Parametreler
+/// - `value`: Logaritması alınacak sayı.
+///
+/// # Dönüş Değeri
+/// Sayının doğal logaritması.
+pub fn log(value: float) -> float {
+    _cnt_math_log(value)
+}
+
+/// Bir sayının 10 tabanında logaritmasını döndürür.
+/// Negatif sayılar için davranış belgelenmelidir.
+///
+/// # Parametreler
+/// - `value`: Logaritması alınacak sayı.
+///
+/// # Dönüş Değeri
+/// Sayının 10 tabanında logaritması.
+pub fn log10(value: float) -> float {
+    _cnt_math_log10(value)
+}
+
+/// `e` sabitinin belirtilen üssünü döndürür (e^x).
+///
+/// # Parametreler
+/// - `value`: Üs.
+///
+/// # Dönüş Değeri
+/// `e` üzeri `value` değeri.
+pub fn exp(value: float) -> float {
+    _cnt_math_exp(value)
+}
+
+/// Bir ondalık sayıyı aşağıya en yakın tam sayıya yuvarlar.
+///
+/// # Parametreler
+/// - `value`: Yuvarlanacak ondalık sayı.
+///
+/// # Dönüş Değeri
+/// Aşağı yuvarlanmış değer.
+pub fn floor(value: float) -> float {
+    _cnt_math_floor(value)
+}
+
+/// Bir ondalık sayıyı yukarıya en yakın tam sayıya yuvarlar.
+///
+/// # Parametreler
+/// - `value`: Yuvarlanacak ondalık sayı.
+///
+/// # Dönüş Değeri
+/// Yukarı yuvarlanmış değer.
+pub fn ceil(value: float) -> float {
+    _cnt_math_ceil(value)
+}
+
+/// Bir ondalık sayıyı en yakın tam sayıya yuvarlar (genellikle .5 için yukarı).
+///
+/// # Parametreler
+/// - `value`: Yuvarlanacak ondalık sayı.
+///
+/// # Dönüş Değeri
+/// En yakın tam sayıya yuvarlanmış değer.
+pub fn round(value: float) -> float {
+    _cnt_math_round(value)
+}
+
+/// Pi (π) sabiti. Yaklaşık 3.14159.
+pub let PI: float = _CNT_MATH_PI;
+
+/// Euler sabiti (e). Yaklaşık 2.71828.
+pub let E: float = _CNT_MATH_E;
+
+// --- İstenirse Eklenebilecek Diğer Fonksiyonlar ---
+// - min(a: T, b: T) -> T; // İki sayıdan küçüğünü döndürür (Jenerik veya tip bazlı)
+// - max(a: T, b: T) -> T; // İki sayıdan büyüğünü döndürür (Jenerik veya tip bazlı)
+// - clamp(value: T, min_val: T, max_val: T) -> T; // Değeri belirli bir aralıkta tutar
+// - atan2(y: float, x: float) -> float; // İki argümanlı ark tanjant
+// - mod_f(dividend: float, divisor: float) -> float; // Ondalık sayılar için modülüs (kalan) operatörü

@@ -1,0 +1,165 @@
+// net.cnt
+// Standart Ağ (Networking) modülü
+
+import std::string; // String işlemleri ve hata mesajları için
+import std::collections; // List<u8> (byte dizileri) için gerekebilir
+
+// Harici C veya sistem ağ API'lerine bağlandığı varsayılan dahili fonksiyonlar.
+// Bu fonksiyonlar, işletim sisteminin soket çağrılarını (örn. socket, bind, listen, accept, connect, send, recv, close) kullanır.
+extern fn _cnt_net_tcp_listener_bind(addr: &string) -> _cnt_Result_TcpListener_net_Error;
+extern fn _cnt_net_tcp_listener_accept(listener: &TcpListener) -> _cnt_Result_TcpStream_net_Error;
+extern fn _cnt_net_tcp_stream_connect(addr: &string) -> _cnt_Result_TcpStream_net_Error;
+extern fn _cnt_net_tcp_stream_send(stream: &TcpStream, data: &List<u8>) -> _cnt_Result_int_net_Error; // Gönderilen byte sayısı
+extern fn _cnt_net_tcp_stream_recv(stream: &TcpStream, buffer: &mut List<u8>) -> _cnt_Result_int_net_Error; // Okunan byte sayısı
+extern fn _cnt_net_tcp_stream_close(stream: TcpStream) -> _cnt_Result_void_net_Error; // Soketi kapatır
+extern fn _cnt_net_listener_close(listener: TcpListener) -> _cnt_Result_void_net_Error; // Listener'ı kapatır
+
+// `u8` tipi: İşaretsiz 8-bit tam sayı. Byte'ları temsil etmek için kullanılır.
+// CNT'de yerleşik olduğu varsayılır.
+
+/// `Error` Enum'u: Ağ işlemleri sırasında oluşabilecek hataları temsil eder.
+pub enum Error {
+    /// Adres ayrıştırma hatası veya geçersiz adres.
+    AddrParseError(string);
+    /// Bağlantı reddedildi veya zaman aşımına uğradı.
+    ConnectionRefused;
+    /// Hedef makineye veya ağa ulaşılamıyor.
+    HostUnreachable;
+    /// Adres kullanımda (bind hatası).
+    AddrInUse;
+    /// Ağ hatası (örn. kablo çekildi).
+    NetworkError(string);
+    /// Bir I/O işlemi sırasında genel hata (örn. okuma/yazma hatası).
+    IoError(string);
+    /// Bilinmeyen veya yakalanamayan bir hata.
+    Other(string);
+}
+
+/// `Result<T, E>` Enum'u: Bir işlemin başarılı sonucunu (`Ok(T)`) veya bir hatayı (`Err(E)`) temsil eder.
+/// `collections.cnt` dosyasında tanımlanan `Result` ile aynıdır, ancak burada tekrar tanımlanmıştır
+/// veya kütüphane genelinde tek bir `std::result::Result` olması tercih edilebilir.
+pub enum Result<T, E> {
+    Ok(T);
+    Err(E);
+}
+
+// `TcpListener` ve `TcpStream` yapılarının dahili implementasyonları (örn. int socket_fd) dışarıya kapalı olmalıdır.
+// Sahiplik kuralları gereği, bu yapıların Drop edildiğinde alttaki soket kaynağını serbest bırakması sağlanmalıdır.
+
+/// `TcpListener`: Gelen TCP bağlantılarını dinleyen bir soket.
+/// `bind()` metodu ile oluşturulur.
+pub struct TcpListener {
+    // Dahili soket tanımlayıcısı (örn. int fd;)
+    // Sahiplik sisteminin Drop edildiğinde soketi kapatmasını sağlamalıdır.
+}
+
+/// `TcpStream`: Bir TCP bağlantısının her iki ucunu temsil eden bir soket.
+/// Veri gönderme ve alma işlemleri için kullanılır.
+/// `connect()` veya `TcpListener::accept()` metotları ile oluşturulur.
+pub struct TcpStream {
+    // Dahili soket tanımlayıcısı (örn. int fd;)
+    // Sahiplik sisteminin Drop edildiğinde soketi kapatmasını sağlamalıdır.
+}
+
+/// Gelen TCP bağlantılarını dinlemek için bir `TcpListener` oluşturur ve belirtilen adrese bağlar.
+///
+/// # Parametreler
+/// - `addr`: Dinlenecek adres ve port (örn. "127.0.0.1:8080" veya "0.0.0.0:80").
+///
+/// # Dönüş Değeri
+/// Başarılı olursa yapılandırılmış `TcpListener` içeren `Result::Ok(TcpListener)`,
+/// hata oluşursa `Result::Err(Error)`.
+pub fn bind(addr: &string) -> Result<TcpListener, Error> {
+    _cnt_net_tcp_listener_bind(addr)
+}
+
+/// `TcpListener` üzerinde yeni bir gelen TCP bağlantısını kabul eder ve bir `TcpStream` döndürür.
+/// Bu fonksiyon, bir bağlantı gelene kadar bekler (blocking).
+///
+/// # Parametreler
+/// - `listener`: Bağlantıların kabul edileceği `TcpListener` referansı.
+///
+/// # Dönüş Değeri
+/// Başarılı olursa yeni `TcpStream` içeren `Result::Ok(TcpStream)`,
+/// hata oluşursa `Result::Err(Error)`.
+pub fn accept(listener: &TcpListener) -> Result<TcpStream, Error> {
+    _cnt_net_tcp_listener_accept(listener)
+}
+
+/// Belirtilen adresteki bir TCP sunucusuna bağlantı kurar ve bir `TcpStream` döndürür.
+///
+/// # Parametreler
+/// - `addr`: Bağlanılacak sunucunun adresi ve portu (örn. "example.com:80").
+///
+/// # Dönüş Değeri
+/// Başarılı olursa bağlantı kurulan `TcpStream` içeren `Result::Ok(TcpStream)`,
+/// hata oluşursa `Result::Err(Error)`.
+pub fn connect(addr: &string) -> Result<TcpStream, Error> {
+    _cnt_net_tcp_stream_connect(addr)
+}
+
+/// Bir `TcpStream` üzerinden veri gönderir.
+///
+/// # Parametreler
+/// - `stream`: Verinin gönderileceği `TcpStream` referansı.
+/// - `data`: Gönderilecek byte dizisi (List<u8> referansı).
+///
+/// # Dönüş Değeri
+/// Başarılı olursa gönderilen byte sayısını içeren `Result::Ok(int)`,
+/// hata oluşursa `Result::Err(Error)`.
+pub fn send(stream: &TcpStream, data: &collections::List<u8>) -> Result<int, Error> {
+    _cnt_net_tcp_stream_send(stream, data)
+}
+
+/// Bir `TcpStream` üzerinden veri alır.
+/// Alınan veri, sağlanan `buffer`'a yazılır.
+///
+/// # Parametreler
+/// - `stream`: Verinin alınacağı `TcpStream` referansı.
+/// - `buffer`: Alınan verinin yazılacağı mutable byte dizisi (List<u8> referansı).
+///
+/// # Dönüş Değeri
+/// Başarılı olursa okunan byte sayısını içeren `Result::Ok(int)`,
+/// bağlantı kapatılırsa (EOF) `Result::Ok(0)`,
+/// hata oluşursa `Result::Err(Error)`.
+pub fn recv(stream: &TcpStream, buffer: &mut collections::List<u8>) -> Result<int, Error> {
+    // Buffer'ın kapasitesi kadar veya daha az veri okunur.
+    // buffer'ın büyüklüğünün `_cnt_net_tcp_stream_recv` tarafından dinamik olarak yönetildiği varsayılır,
+    // veya buffer'ın önceden yeterli kapasiteye sahip olması beklenir.
+    _cnt_net_tcp_stream_recv(stream, buffer)
+}
+
+/// Bir `TcpStream` bağlantısını kapatır ve ilişkili kaynakları serbest bırakır.
+/// Soket kaynağının sahiplik sistemi tarafından otomatik olarak serbest bırakıldığı durumlarda
+/// bu fonksiyona açıkça ihtiyaç duyulmayabilir, ancak kontrol için eklenebilir.
+///
+/// # Parametreler
+/// - `stream`: Kapatılacak `TcpStream` (sahiplik taşınır ve kaynak serbest bırakılır).
+///
+/// # Dönüş Değeri
+/// Başarılı olursa `Result::Ok(void)`, hata oluşursa `Result::Err(Error)`.
+pub fn close_stream(stream: TcpStream) -> Result<void, Error> {
+    _cnt_net_tcp_stream_close(stream)
+}
+
+/// Bir `TcpListener`'ı kapatır ve ilişkili kaynakları serbest bırakır.
+/// Soket kaynağının sahiplik sistemi tarafından otomatik olarak serbest bırakıldığı durumlarda
+/// bu fonksiyona açıkça ihtiyaç duyulmayabilir, ancak kontrol için eklenebilir.
+///
+/// # Parametreler
+/// - `listener`: Kapatılacak `TcpListener` (sahiplik taşınır ve kaynak serbest bırakılır).
+///
+/// # Dönüş Değeri
+/// Başarılı olursa `Result::Ok(void)`, hata oluşursa `Result::Err(Error)`.
+pub fn close_listener(listener: TcpListener) -> Result<void, Error> {
+    _cnt_net_listener_close(listener)
+}
+
+
+// --- İstenirse Eklenebilecek Diğer Fonksiyonlar ve Yapılar ---
+// - UdpSocket: UDP iletişimi için.
+// - to_string(): IpAddr veya SocketAddr gibi yapılar için String dönüşümleri.
+// - set_nonblocking(): Soketi bloklamayan moda geçirme.
+// - shutdown(): Soketin belirli bir yönünü kapatma (read/write).
+// - async/await: Asenkron ağ işlemleri için (daha gelişmiş bir dil özelliği).
+// - DNS çözümlemesi: Hostname'den IP adresine dönüştürme.
